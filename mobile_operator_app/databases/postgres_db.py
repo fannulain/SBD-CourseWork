@@ -84,6 +84,11 @@ class PostgresManager:
         with self.connection.cursor() as cursor:
             cursor.execute(query, (ric,))
 
+    def deactivate_subscriber(self, ric: str):
+        query = "UPDATE subscribers SET is_active = FALSE WHERE ric = %s"
+        with self.connection.cursor() as cursor:
+            cursor.execute(query, (ric,))
+
     def get_debtors_raw(self):
         query = """
             SELECT ric, full_name, last_payment_date, monthly_fee
@@ -115,6 +120,22 @@ class PostgresManager:
             query = sql.SQL("SELECT {} FROM subscribers").format(
                 sql.SQL(', ').join(map(sql.Identifier, safe_columns))
             )
+            cursor.execute(query)
+            return cursor.fetchall()
+        
+    def get_tariff_analytics(self):
+        query = """
+            SELECT 
+                service_type, 
+                COUNT(*) as user_count, 
+                SUM(monthly_fee) as total_revenue,
+                AVG(monthly_fee) as avg_check
+            FROM subscribers
+            WHERE is_active = TRUE
+            GROUP BY service_type
+            ORDER BY total_revenue DESC;
+        """
+        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query)
             return cursor.fetchall()
         
