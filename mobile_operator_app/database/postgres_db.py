@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 from typing import List, Optional
 from models import Subscriber
 
-from datetime import date, timedelta
-
 load_dotenv()
 
 class PostgresManager:
