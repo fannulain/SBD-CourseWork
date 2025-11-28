@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 from dotenv import load_dotenv
 from typing import List, Dict, Any
 from datetime import datetime
-from models import ServiceRequest
+from .models import ServiceRequest
 
 load_dotenv()
 

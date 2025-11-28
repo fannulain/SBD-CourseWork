@@ -4,8 +4,8 @@ from psycopg2.extras import RealDictCursor
 from psycopg2 import sql
 from dotenv import load_dotenv
 from typing import List, Optional
-from models import Subscriber
-from models import DebtorReport
+from .models import Subscriber
+from .models import DebtorReport
 
 load_dotenv()
 

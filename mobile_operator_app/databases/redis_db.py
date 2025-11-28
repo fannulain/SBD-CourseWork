@@ -3,7 +3,7 @@ import redis
 import json
 from dotenv import load_dotenv
 from typing import List, Optional
-from models import DebtorReport
+from .models import DebtorReport
 
 load_dotenv()
 
