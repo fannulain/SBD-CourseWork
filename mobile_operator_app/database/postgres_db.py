@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from typing import List, Optional
 from models import Subscriber
 
+from datetime import date, timedelta
+
 load_dotenv()
 
 class PostgresManager:
@@ -20,7 +22,7 @@ class PostgresManager:
         self.connection.autocommit = True
         self._create_table()
 
-    def _crate_table(self):
+    def _create_table(self):
         query = """
             CREATE TABLE IF NOT EXISTS subscribers(
                 ric VARCHAR(50) PRIMARY KEY,

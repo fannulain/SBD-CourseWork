@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # --- PostgreSQL ---
+  postgres:
+    image: postgres:15
+    container_name: mobile_operator_pg
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: mobile_operator_coursework
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  # --- MongoDB ---
+  mongo:
+    image: mongo:6.0
+    container_name: mobile_operator_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # --- Redis ---
+  redis:
+    image: redis:alpine
+    container_name: mobile_operator_redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  pg_data:
+  mongo_data:
