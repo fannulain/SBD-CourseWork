@@ -5,6 +5,7 @@ from psycopg2 import sql
 from dotenv import load_dotenv
 from typing import List, Optional
 from models import Subscriber
+from models import DebtorReport
 
 load_dotenv()
 
@@ -93,7 +94,8 @@ class PostgresManager:
 
         with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query)
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+            return [DebtorReport(**row) for row in rows]
         
     def get_custom_columns(self, columns: List[str]):
         if not columns:
