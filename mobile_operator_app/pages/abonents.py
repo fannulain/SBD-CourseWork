@@ -29,7 +29,7 @@ try:
         data = [s.model_dump() for s in subscribers]
     if data:
         df = pd.DataFrame(data)
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(df, width='stretch')
         st.caption(f"Всього записів: {len(data)}")
     else:
         st.info("База даних порожня")
@@ -78,47 +78,41 @@ with tab_action:
     st.subheader("Керування існуючим абонентом")
     
     target_ric = st.text_input("Введіть RIC для дії:", placeholder="RIC-...")
-    
-    col_act1, col_act2 = st.columns(2)
-    
-    with col_act1:
-        if st.button("⛔ Деактивувати (Відключити)", help="Змінює статус is_active на False"):
-            if target_ric:
-                try:
-                    pg_db.deactivate_subscriber(target_ric) #
-                    st.success(f"Абонента {target_ric} деактивовано.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Помилка: {e}")
-            else:
-                st.warning("Введіть RIC.")
-
-    with col_act2:
-        if st.button("🗑️ Видалити з бази", type="primary", help="Повністю видаляє запис"):
-            if target_ric:
-                try:
-                    pg_db.delete_subscriber(target_ric) #
-                    st.warning(f"Абонента {target_ric} видалено.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Помилка: {e}")
-            else:
-                st.warning("Введіть RIC.")
+    if st.button("⛔ Деактивувати (Відключити)", help="Змінює статус is_active на False"):
+        if target_ric:
+            try:
+                pg_db.deactivate_subscriber(target_ric)
+                st.success(f"Абонента {target_ric} деактивовано.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Помилка: {e}")
+        else:
+            st.warning("Введіть RIC.")
+    if st.button("🗑️ Видалити з бази", type="primary", help="Повністю видаляє запис"):
+        if target_ric:
+            try:
+                pg_db.delete_subscriber(target_ric)
+                st.warning(f"Абонента {target_ric} видалено.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Помилка: {e}")
+        else:
+            st.warning("Введіть RIC.")
 with tab_anal:
     st.subheader("Фінансова статистика")
     
     if st.button("📊 Розрахувати дохідність"):
         try:
-            stats = pg_db.get_tariff_analytics() #
+            stats = pg_db.get_tariff_analytics()
             if stats:
                 df_stats = pd.DataFrame(stats)
                 
                 c_a1, c_a2 = st.columns(2)
                 with c_a1:
-                    st.dataframe(df_stats, use_container_width=True)
+                    st.dataframe(df_stats, width='stretch')
                 with c_a2:
                     st.bar_chart(df_stats, x="service_type", y="total_revenue")
             else:
-                st.info("Недостатньо даних для аналітики.")
+                st.info("Недостатньо даних.")
         except Exception as e:
             st.error(f"Помилка аналітики: {e}")

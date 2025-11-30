@@ -32,7 +32,7 @@ with col_report:
                 'days_overdue': 'Днів простроч.',
                 'debt_amount': 'Сума боргу, грн'
             }, inplace=True)
-            st.dataframe(df, use_container_width=True)
+            st.dataframe(df, width='stretch')
             st.caption("Борг розраховано на основі місячної плати та днів прострочки.")
         else:
             st.warning("Боржників не знайдено.")
