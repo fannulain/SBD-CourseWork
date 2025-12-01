@@ -139,5 +139,39 @@ class PostgresManager:
             cursor.execute(query)
             return cursor.fetchall()
         
+    def update_subscriber(self, ric: str, updates: dict):
+        if not updates:
+            return
+
+        allowed_columns = {
+            "pin_code", "full_name", "phone_model", "phone_type",
+            "service_type", "contract_start_date", "contract_duration_months",
+            "monthly_fee", "is_active", "last_payment_date"
+        }
+
+        safe_updates = {k: v for k, v in updates.items() if k in allowed_columns}
+
+        if not safe_updates:
+            return
+
+        set_clauses = []
+        values = []
+
+        for column, value in safe_updates.items():
+            set_clauses.append(sql.SQL("{} = %s").format(sql.Identifier(column)))
+            values.append(value)
+
+        values.append(ric)
+
+        query = sql.SQL("UPDATE subscribers SET {} WHERE ric = %s").format(
+            sql.SQL(', ').join(set_clauses)
+        )
+
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(query, values)
+        except Exception as e:
+            print(f"Error: {e}")
+        
     def close(self):
         self.connection.close()
