@@ -183,11 +183,14 @@ with tab_anal:
             if stats:
                 df_stats = pd.DataFrame(stats)
                 
+                df_stats["total_revenue"] = df_stats["total_revenue"].astype(float)
+                df_stats["avg_check"] = df_stats["avg_check"].astype(float)
+
                 c_a1, c_a2 = st.columns(2)
                 with c_a1:
                     st.dataframe(df_stats, width='stretch')
-                with c_a2:
-                    st.bar_chart(df_stats, x="service_type", y="total_revenue")
+                #with c_a2:
+                #    st.bar_chart(df_stats, x="service_type", y="total_revenue")
             else:
                 st.info("Недостатньо даних.")
         except Exception as e:
