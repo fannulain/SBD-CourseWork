@@ -39,7 +39,12 @@ except Exception as e:
 
 
 st.divider()
-tab_add, tab_action, tab_anal = st.tabs(["➕ Додати нового", "⚙️ Дії з абонентом", "📈 Аналітика"])
+tab_add, tab_edit, tab_anal = st.tabs(["➕ Додати нового", "✏️ Керування", "📈 Аналітика"])
+if 'edit_subscriber_ric' not in st.session_state:
+    st.session_state['edit_subscriber_ric'] = ""
+if 'subscriber_to_edit' not in st.session_state:
+    st.session_state['subscriber_to_edit'] = None
+
 with tab_add:
     st.subheader("Реєстрація нового абонента")
     with st.form("add_subscriber_form"):
@@ -74,30 +79,101 @@ with tab_add:
                     st.error(f"Помилка при додаванні: {e}")
             else:
                 st.error("Заповніть обов'язкові поля (RIC, ПІБ, PIN).")
-with tab_action:
-    st.subheader("Керування існуючим абонентом")
-    
-    target_ric = st.text_input("Введіть RIC для дії:", placeholder="RIC-...")
-    if st.button("⛔ Деактивувати (Відключити)", help="Змінює статус is_active на False"):
-        if target_ric:
+
+with tab_edit:
+    st.subheader("Пошук абонента для редагування/видалення")
+    with st.form("search_for_edit_form"):
+        search_ric_edit = st.text_input("Введіть RIC для пошуку:", 
+                                        placeholder="RIC-...",
+                                        key="search_ric_edit_input")
+        
+        search_button = st.form_submit_button("🔍 Знайти", type="primary")
+        if search_button:
+            if search_ric_edit:
+                with st.spinner(f"Пошук абонента {search_ric_edit}..."):
+                    found_sub = pg_db.get_subscriber(search_ric_edit)
+                if found_sub:
+                    st.session_state['subscriber_to_edit'] = found_sub.model_dump() 
+                    st.success(f"✅ Абонента {found_sub.full_name} знайдено. Оновіть дані або видаліть нижче.")
+                else:
+                    st.session_state['subscriber_to_edit'] = None
+                    st.error(f"Абонента з RIC '{search_ric_edit}' не знайдено.")
+            else:
+                st.warning("Введіть RIC для пошуку.")
+    sub_data = st.session_state['subscriber_to_edit']
+    if sub_data:
+        st.subheader(f"Редагування даних для RIC: {sub_data['ric']}")
+        st.caption("Змініть необхідні поля та натисніть 'Оновити дані'.")
+        current_date = sub_data.get('contract_start_date')
+        if isinstance(current_date, str):
             try:
-                pg_db.deactivate_subscriber(target_ric)
-                st.success(f"Абонента {target_ric} деактивовано.")
+                current_date = date.fromisoformat(current_date)
+            except:
+                current_date = date.today()
+        last_payment_date = sub_data.get('last_payment_date')
+        if isinstance(last_payment_date, str):
+             try:
+                last_payment_date = date.fromisoformat(last_payment_date)
+             except:
+                last_payment_date = date.today()
+        with st.form("edit_subscriber_form"):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"**RIC:** `{sub_data['ric']}`")
+                edit_name = st.text_input("ПІБ", value=sub_data['full_name'])
+                edit_pin = st.text_input("PIN-код", value=sub_data['pin_code'], max_chars=4)
+                all_models = ["iPhone 14", "Samsung S23", "Xiaomi 13", "Nokia 3310", "Pixel 7"]
+                if sub_data['phone_model'] not in all_models:
+                    all_models.append(sub_data['phone_model'])
+                
+                edit_model = st.selectbox("Модель телефону", 
+                                          options=all_models,
+                                          index=all_models.index(sub_data['phone_model'])
+                                          )
+                edit_active = st.checkbox("Активний контракт", value=sub_data['is_active'])
+            with col2:
+                all_services = ["Преміум", "Стандарт", "Економ", "Студент"]
+                edit_service = st.selectbox("Тарифний план", 
+                                            options=all_services,
+                                            index=all_services.index(sub_data['service_type'])
+                                            )
+                edit_fee = st.number_input("Вартість (грн/міс)", min_value=0.0, step=10.0, value=float(sub_data['monthly_fee']))
+                edit_duration = st.number_input("Тривалість контракту (міс.)", min_value=1, step=1, value=sub_data['contract_duration_months'])
+                edit_date = st.date_input("Дата контракту", value=current_date)
+                edit_last_payment = st.date_input("Дата останньої оплати", 
+                                                  value=last_payment_date if last_payment_date else date.today()
+                                                  )
+            submit_edit = st.form_submit_button("💾 Оновити дані", type="secondary")
+            if submit_edit:
+                try:
+                    updates = {
+                        "full_name": edit_name,
+                        "pin_code": edit_pin,
+                        "phone_model": edit_model,
+                        "service_type": edit_service,
+                        "monthly_fee": edit_fee,
+                        "contract_start_date": edit_date,
+                        "contract_duration_months": edit_duration,
+                        "is_active": edit_active,
+                        "last_payment_date": edit_last_payment
+                    }
+                    pg_db.update_subscriber(sub_data['ric'], updates)
+                    st.success(f"Дані абонента {sub_data['ric']} успішно оновлено!")
+                    st.session_state['subscriber_to_edit'] = None
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Помилка при оновленні: {e}")
+        if st.button("🗑️ Видалити абонента з бази", type="primary", key="delete_subscriber_btn", help="Повністю видаляє запис"):
+            try:
+                pg_db.delete_subscriber(sub_data['ric'])
+                st.error(f"Абонента {sub_data['ric']} **повністю видалено**.")
+                # Очищаємо стан, щоб прибрати дані абонента з інтерфейсу
+                st.session_state['subscriber_to_edit'] = None
                 st.rerun()
             except Exception as e:
-                st.error(f"Помилка: {e}")
-        else:
-            st.warning("Введіть RIC.")
-    if st.button("🗑️ Видалити з бази", type="primary", help="Повністю видаляє запис"):
-        if target_ric:
-            try:
-                pg_db.delete_subscriber(target_ric)
-                st.warning(f"Абонента {target_ric} видалено.")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Помилка: {e}")
-        else:
-            st.warning("Введіть RIC.")
+                st.error(f"Помилка при видаленні: {e}")
+    else:
+        st.info("Введіть RIC та натисніть 'Знайти', щоб завантажити дані для керування.")
 with tab_anal:
     st.subheader("Фінансова статистика")
     
@@ -107,11 +183,14 @@ with tab_anal:
             if stats:
                 df_stats = pd.DataFrame(stats)
                 
+                df_stats["total_revenue"] = df_stats["total_revenue"].astype(float)
+                df_stats["avg_check"] = df_stats["avg_check"].astype(float)
+
                 c_a1, c_a2 = st.columns(2)
                 with c_a1:
                     st.dataframe(df_stats, width='stretch')
-                with c_a2:
-                    st.bar_chart(df_stats, x="service_type", y="total_revenue")
+                #with c_a2:
+                #    st.bar_chart(df_stats, x="service_type", y="total_revenue")
             else:
                 st.info("Недостатньо даних.")
         except Exception as e:
