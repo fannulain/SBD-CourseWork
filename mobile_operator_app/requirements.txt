@@ -1,0 +1,10 @@
+streamlit
+pandas
+psycopg2-binary
+pymongo
+redis
+python-dotenv
+pydantic
+pytest
+pytest-mock
+pytest-order
