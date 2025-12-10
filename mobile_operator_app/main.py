@@ -60,18 +60,23 @@ def generate_test_data():
             
     if count > 0:
         st.success(f"✅ Додано {count} нових абонентів!")
-        st.balloons()
     
     if errors:
         st.error("⚠️ Помилки:")
         for e in errors: st.write(e)
 
+
+
 def clear_all_data():
     pg_manager = st.session_state['pg_db']
+    redis_manager = st.session_state['redis_db']
     try:
+
         with pg_manager.connection.cursor() as cursor:
             cursor.execute("TRUNCATE TABLE subscribers;")
-        st.toast("Базу очищено", icon="🧹")
+
+        redis_manager.clear_cache()
+        st.toast("Бази даних очищено", icon="🧹")
         time.sleep(1)
     except Exception as e:
         st.error(f"Помилка: {e}")

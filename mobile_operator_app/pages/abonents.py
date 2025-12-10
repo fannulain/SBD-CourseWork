@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 from databases.models import Subscriber
+import time
+
 if 'pg_db' not in st.session_state or st.session_state['pg_db'] is None:
     st.error(" На головну сторінку, щоб ініціалізувати систему.")
     st.stop()
@@ -74,6 +76,7 @@ with tab_add:
                     )
                     pg_db.add_subscriber(sub) 
                     st.success(f"Абонента {new_name} успішно додано!")
+                    time.sleep(1.5)
                     st.rerun()
                 except Exception as e:
                     st.error(f"Помилка при додаванні: {e}")
