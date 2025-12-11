@@ -129,10 +129,7 @@ with tab_edit:
                 if sub_data['phone_model'] not in all_models:
                     all_models.append(sub_data['phone_model'])
                 
-                edit_model = st.selectbox("Модель телефону", 
-                                          options=all_models,
-                                          index=all_models.index(sub_data['phone_model'])
-                                          )
+                edit_model = st.text_input("Модель телефону", value=sub_data['phone_model'])
                 edit_active = st.checkbox("Активний контракт", value=sub_data['is_active'])
             with col2:
                 all_services = ["Преміум", "Стандарт", "Економ", "Студент"]
@@ -170,7 +167,6 @@ with tab_edit:
             try:
                 pg_db.delete_subscriber(sub_data['ric'])
                 st.error(f"Абонента {sub_data['ric']} **повністю видалено**.")
-                # Очищаємо стан, щоб прибрати дані абонента з інтерфейсу
                 st.session_state['subscriber_to_edit'] = None
                 st.rerun()
             except Exception as e:
@@ -192,8 +188,6 @@ with tab_anal:
                 c_a1, c_a2 = st.columns(2)
                 with c_a1:
                     st.dataframe(df_stats, width='stretch')
-                #with c_a2:
-                #    st.bar_chart(df_stats, x="service_type", y="total_revenue")
             else:
                 st.info("Недостатньо даних.")
         except Exception as e:

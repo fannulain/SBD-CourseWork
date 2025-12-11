@@ -31,7 +31,7 @@ def generate_test_data():
     pg_manager = st.session_state['pg_db']
     
     models = ["iPhone 13", "Samsung S21", "Xiaomi Redmi 9", "Nokia 3310", "Pixel 7"]
-    names = ["Шевченко", "Бойко", "Коваль", "Мельник", "Ткаченко"]
+    names = ["Шевченко", "Бойко", "Шпак", "Мельник", "Ткаченко"]
     services = ["Преміум", "Стандарт", "Економ", "Студент"]
     
     count = 0
